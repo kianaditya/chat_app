@@ -3,4 +3,5 @@ Rails.application.routes.draw do
   Rails.application.routes.draw do
     mount ActionCable.server => '/cable'
   end
+  resources :chat, only: [:index]
 end
