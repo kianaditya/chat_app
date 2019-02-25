@@ -1,13 +1,43 @@
-App.chat = App.cable.subscriptions.create("ChatChannel", {
-  connected: function() {
-    // Called when the subscription is ready for use on the server
-  },
+App.notifications = App.cable.subscriptions.create({
+  channel: "ChatChannel"
+}, {
+      container() {
+          const container = document.getElementById('chat_window');
+          return container;
+      },
 
-  disconnected: function() {
-    // Called when the subscription has been terminated by the server
-  },
+      connected() {
+          // Called when the subscription is ready for use on the server
+          // Display the active connection message (for demo purposes only)
+          this.container().innerHTML = '<p>Connected to Notification server</p>'
+          setTimeout(() => {
+              this.container().innerHTML = '';
+          }, 3000);  
+          console.log('Connected to websocket server ');
+      },
 
-  received: function(data) {
-    // Called when there's incoming data on the websocket for this channel
+      disconnected() {
+          // Called when the subscription has been terminated by the server
+          // Display the connection has been lost message (for demo purposes only)
+          this.container().innerHTML = '<p>Disconneced from server</p>'
+          setTimeout(() => {
+              this.container().innerHTML = '';
+          }, 3000);  
+          console.log('Disconneced');
+      },
+
+      received(data) {
+          // Create an element that will hold the message
+          let node = document.createElement('p');
+          node.innerHTML = data.message;
+          // Append the message to the element
+          this.container().appendChild(node)
+
+          setTimeout(() => {
+              // Remove the node after 3 seconds
+              this.container().removeChild(node);
+          }, 3000);
+      },
+
   }
-});
+);
