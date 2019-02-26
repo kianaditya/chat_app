@@ -11,6 +11,7 @@ class ChatController < ApplicationController
     end
 
     def show
+      @chat = Chat.find(params[:id])
       @messages = Message.where(chat_id: params[:id])
     end
 end

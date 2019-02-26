@@ -3,4 +3,5 @@
 #chat_window
 
 -@chats.each do |chat|
-  =link_to "Chat between #{chat.users.first.email} and #{chat.users.second.email}", chat_path(chat.id)
+  %span="Chat between #{chat.users.first.email} and #{chat.users.second.email}"
+  =link_to "join", chat_path(chat.id)
