@@ -1,6 +1,7 @@
 -@messages.each do |message|
   %p= "#{message.user.email} says: #{message.text}"
-
+#message_window
+#chat_id{name: "#{@chat.id}"}
 = form_with scope: :message, url: message_index_path, local: true do | form |
   %p
     = form.label 'Send Message'
