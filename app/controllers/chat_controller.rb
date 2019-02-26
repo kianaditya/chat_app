@@ -9,4 +9,8 @@ class ChatController < ApplicationController
         end
       end
     end
+
+    def show
+      @messages = Message.where(chat_id: params[:id])
+    end
 end
