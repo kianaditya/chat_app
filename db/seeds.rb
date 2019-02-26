@@ -12,6 +12,7 @@ User.destroy_all
 
 user1 = User.create(email: 'user1@mail.com', password:'password')
 user2 = User.create(email: 'user2@mail.com', password:'password')
+user3 = User.create(email: 'user3@mail.com', password:'password')
 
 chat = Chat.create()
 chat.users << user1

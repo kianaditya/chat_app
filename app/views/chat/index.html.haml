@@ -1,7 +1,8 @@
 = render partial: 'partials/navbar'
 
-#chat_window
-
--@chats.each do |chat|
-  %span="Chat between #{chat.users.first.email} and #{chat.users.second.email}"
-  =link_to "join", chat_path(chat.id)
+-if user_signed_in?
+  #chat_window
+  -@chats.each do |chat|
+    -if chat.users.include?(current_user)
+      %span="Chat between #{chat.users.first.email} and #{chat.users.second.email}"
+      =link_to "join", chat_path(chat.id)

@@ -3,8 +3,7 @@ class MessageController < ApplicationController
     message = Message.new(message_params)
     chat = Chat.find_by_id(message_params[:chat_id])
     if message.save
-      # MessageChannel.broadcast_to chat, message
-      # head :ok
+      MessageChannel.broadcast_to chat, message
       redirect_to chat_path(chat)
     end
   end
