@@ -17,11 +17,12 @@ group :development, :test do
   gem 'pry-byebug'
   gem 'pry-rails'
   gem 'rspec-rails'
-  # gem 'shoulda-matchers'
+  gem 'shoulda-matchers'
   gem 'cucumber-rails', require: false
   gem 'database_cleaner'
   gem 'factory_bot_rails'
-
+  gem 'chromedriver-helper'
+  gem 'selenium-webdriver'
 end
 
 group :development do
