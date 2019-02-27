@@ -51,7 +51,7 @@ body {
 }
 
 .send-message{
-  background-color: rgb(5, 44, 53);
+  background-color:darkgreen;
   width: 50%;
   border-radius: 20px;
   margin: 20px;
@@ -60,7 +60,7 @@ body {
 }
 
 .receive-message{
-  background-color: rgb(5, 44, 53);
+  background-color: darkgrey;
   width: 50%;
   border-radius: 20px;
   margin: 20px;

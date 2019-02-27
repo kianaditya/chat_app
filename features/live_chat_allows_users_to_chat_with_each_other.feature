@@ -22,7 +22,7 @@ Feature: LiveChat allows users to exchage messages
         And I open a new window
         And I log in as "user-2@random.com"
         And I visit the site
-        And I click on "join"
+        And I click on "Chat with user-1@random.com"
         Then I should see "user-1@random.com says: Hello!"
         And I fill in "Hello there!" in "message_text"
         And I click on 'Send'
