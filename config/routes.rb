@@ -5,6 +5,6 @@ Rails.application.routes.draw do
 
   root controller: :chat, action: :index
   devise_for :users
-  resources :chat, only: [:index, :show]
+  resources :chat, only: [:index, :show, :create]
   resources :message, only: [:create]
 end
