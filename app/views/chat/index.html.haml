@@ -1,0 +1,12 @@
+-if user_signed_in?
+  #chat_window
+  %h4 Active chats:
+  -@chats.each do |chat|
+    -if chat.users.include?(current_user)
+      %p="Chat between #{chat.users.first.email} and #{chat.users.second.email}"
+      =link_to "join", chat_path(chat.id)
+  %h4 Start a new chat with:
+  -@users.each do |user|
+    -unless user == current_user
+      =link_to "#{user.email}", chat_index_path(user: user), method: :post
+      %br/

@@ -14,3 +14,13 @@
 //= require activestorage
 //= require turbolinks
 //= require_tree .
+
+
+document.addEventListener('turbolinks:load', () => {
+  let chatForm = document.getElementById('chat_form')
+  if (chatForm) {
+    chatForm.addEventListener('submit', () => {
+      setTimeout(() => chatForm.reset(), 1)
+    })
+  }
+})

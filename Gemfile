@@ -12,15 +12,16 @@ gem 'bootsnap', '>= 1.1.0', require: false
 gem 'devise'
 gem 'redis'
 gem 'haml-rails'
-gem 'factory_bot_rails'
 
 group :development, :test do
   gem 'pry-byebug'
   gem 'pry-rails'
   gem 'rspec-rails'
-  gem 'shoulda-matchers'
+  # gem 'shoulda-matchers'
   gem 'cucumber-rails', require: false
   gem 'database_cleaner'
+  gem 'factory_bot_rails'
+
 end
 
 group :development do

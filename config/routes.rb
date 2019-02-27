@@ -1,7 +1,10 @@
 Rails.application.routes.draw do
-  devise_for :users
   Rails.application.routes.draw do
     mount ActionCable.server => '/cable'
-  end
-  resources :chat, only: [:index]
+  end  
+
+  root controller: :chat, action: :index
+  devise_for :users
+  resources :chat, only: [:index, :show, :create]
+  resources :message, only: [:create]
 end

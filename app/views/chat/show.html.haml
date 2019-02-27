@@ -1,0 +1,11 @@
+-@messages.each do |message|
+  %p= "#{message.user.email} says: #{message.text}"
+#message_window
+= form_with scope: :message, url: message_index_path, id: :chat_form do | form |
+  = form.hidden_field :chat_id, value: @chat.id, id: :chat_id
+  %p
+    = form.label 'Send Message'
+    %br/
+    = form.text_field :text
+  %p
+    = form.submit "Send"

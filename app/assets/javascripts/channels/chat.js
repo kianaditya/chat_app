@@ -1,43 +1,27 @@
-App.notifications = App.cable.subscriptions.create({
-  channel: "ChatChannel"
-}, {
-      container() {
-          const container = document.getElementById('chat_window');
-          return container;
-      },
 
-      connected() {
-          // Called when the subscription is ready for use on the server
-          // Display the active connection message (for demo purposes only)
-          this.container().innerHTML = '<p>Connected to Notification server</p>'
-          setTimeout(() => {
-              this.container().innerHTML = '';
-          }, 3000);  
-          console.log('Connected to websocket server ');
-      },
-
-      disconnected() {
-          // Called when the subscription has been terminated by the server
-          // Display the connection has been lost message (for demo purposes only)
-          this.container().innerHTML = '<p>Disconneced from server</p>'
-          setTimeout(() => {
-              this.container().innerHTML = '';
-          }, 3000);  
-          console.log('Disconneced');
-      },
-
-      received(data) {
-          // Create an element that will hold the message
-          let node = document.createElement('p');
-          node.innerHTML = data.message;
-          // Append the message to the element
-          this.container().appendChild(node)
-
-          setTimeout(() => {
-              // Remove the node after 3 seconds
-              this.container().removeChild(node);
-          }, 3000);
-      },
-
-  }
-);
+document.addEventListener('turbolinks:load', () =>{
+    let chatForm = document.getElementById('chat_form');
+    if (chatForm) {
+        const chatId = document.getElementById('chat_id').value
+        App.notifications = App.cable.subscriptions.create({
+            channel: "ChatChannel", chat_id: chatId
+          }, {
+                container() {
+                    const container = document.getElementById('message_window');
+                    return container;
+                },
+                connected() {
+                    console.log(`Connected to message:chat_${chatId}`);
+                },
+                disconnected() {
+                    console.log('Disconneced');
+                },
+                received(data) {
+                    let node = document.createElement('p');
+                    node.innerText = `${data.from} says: ${data.message}`;
+                    this.container().appendChild(node);
+                },
+            }
+          );  
+    };
+});
