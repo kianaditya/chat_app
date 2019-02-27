@@ -1,7 +1,8 @@
-=link_to 'Home', root_path
--unless user_signed_in?
-  =link_to 'Register', new_user_registration_path
-  =link_to 'Login', new_user_session_path
-- else
-  =link_to 'Logout', destroy_user_session_path,method: :delete
-  %h4=current_user.email
+.navbar
+  =link_to 'Home', root_path, {class: 'links'}
+  -unless user_signed_in?
+    =link_to 'Register', new_user_registration_path , {class: 'links'}
+    =link_to 'Login', new_user_session_path, {class: 'links'}
+  - else
+    %span.links=link_to 'Logout', destroy_user_session_path, {class: 'links', method: :delete }
+    %span=current_user.email
