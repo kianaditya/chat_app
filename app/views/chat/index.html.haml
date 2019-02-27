@@ -3,9 +3,9 @@
     .chats
       %h4 Active chats:
       -@chats.each do |chat|
-        -if chat.users.include?(current_user)
-          %p="Chat between #{chat.users.first.email} and #{chat.users.second.email}"
-          =link_to "join", chat_path(chat.id), {class: 'links'}
+        -chat.users.each do |user|
+          -unless user === current_user
+            %p=link_to "Chat with #{user.email}", chat_path(chat.id), {class: 'links'}
     .chats
       %h4 Start a new chat with:
       -@users.each do |user|
