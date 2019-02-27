@@ -12,8 +12,7 @@ class ChatChannel < ApplicationCable::Channel
   private
 
   def channel_identifier
-    # self.params[:chat_id]
-    code = params[:data].try(:chat_id) || params[:chat_id]
-    "chat_channel_#{code}"
+    identifier = params[:chat_id]
+    "chat_channel_#{identifier}"
   end
 end
