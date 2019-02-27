@@ -1,12 +1,8 @@
 class ChatController < ApplicationController
     def index
-      @users = User.all
-      all_chats = Chat.all
-      @chats = []
-      all_chats.each do |chat|
-        if chat.users.includes(current_user)
-          @chats.push(chat)
-        end
+      if user_signed_in?
+        @chats = current_user.chats
+        @users = get_available_chats
       end
     end
 
@@ -23,5 +19,24 @@ class ChatController < ApplicationController
         chat.users << user
         redirect_to chat_path(chat)
       end
+    end
+
+    private
+
+    def get_available_chats
+      existing_chat_users = []
+      users = []
+      all_users = User.all
+      @chats.each do |chat|
+        chat.users.each do |user|
+          existing_chat_users.push(user)
+        end
+      end
+      all_users.each do |user|
+        unless existing_chat_users.include?(user)
+          users.push(user)
+        end
+      end
+      users
     end
 end
