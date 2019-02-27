@@ -5,7 +5,7 @@
       -@chats.each do |chat|
         -chat.users.each do |user|
           -unless user === current_user
-            %p=link_to "Chat with #{user.email}", chat_path(chat.id), {class: 'links'}
+            %p=link_to "Chat with #{user.email}", chat_path(chat.id), {class: 'links join'}
     .chats
       %h4 Start a new chat with:
       -@users.each do |user|

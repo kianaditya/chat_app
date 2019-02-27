@@ -18,6 +18,7 @@ body {
   font-size: 120%;
   background-color: #F2F6F7;
   margin: 0;
+  letter-spacing: 1px;
 }
 .main {
   display: flex;
@@ -52,7 +53,7 @@ body {
 
 .send-message{
   background-color:darkgreen;
-  width: 50%;
+  width: 400px;
   border-radius: 20px;
   margin: 20px;
   padding: 10px;
@@ -60,8 +61,8 @@ body {
 }
 
 .receive-message{
-  background-color: darkgrey;
-  width: 50%;
+  background-color: rgb(79, 79, 79);
+  width: 400px;
   border-radius: 20px;
   margin: 20px;
   padding: 10px;
@@ -71,4 +72,15 @@ body {
 .message-container{
   display: flex;
   flex-direction: column;
+}
+
+.join {
+  border:2px black solid;
+  background: dimgray;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.join:hover {
+  background: darkgreen;
 }
