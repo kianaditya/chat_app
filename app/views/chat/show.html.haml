@@ -1,10 +1,11 @@
 .main
   .chats
+    ="Chat with: #{@chat_partner.email}"
     -@messages.each do |message|
       -if message.user.email == current_user.email
-        %p.send-message= "#{message.text}"
+        %p.send-message= message.text
       - else
-      %p.receive-message= "#{message.user.email} says: #{message.text}"
+        %p.receive-message= message.text
     #message_window.message-container
     = form_with scope: :message, url: message_index_path, id: :chat_form do | form |
       = form.hidden_field :chat_id, value: @chat.id, id: :chat_id

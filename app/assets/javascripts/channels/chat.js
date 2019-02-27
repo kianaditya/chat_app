@@ -20,7 +20,7 @@ document.addEventListener('turbolinks:load', () =>{
                 received(data) {
                     let node = document.createElement('p');
                     node.className= data.from === currentUserEmail ? 'send-message' : 'receive-message'
-                    node.innerText = data.from === currentUserEmail ?  `${data.message}` : `${data.from} says: ${data.message}`;
+                    node.innerText = `${data.message}`;
                     this.container().appendChild(node);
                 },
             }

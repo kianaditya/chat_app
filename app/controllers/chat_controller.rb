@@ -9,6 +9,7 @@ class ChatController < ApplicationController
   def show
     @chat = Chat.find(params[:id])
     @messages = Message.where(chat_id: params[:id])
+    @chat_partner = get_chat_partner
   end
 
   def create
@@ -48,5 +49,15 @@ class ChatController < ApplicationController
       end
     end
     users
+  end
+
+  def get_chat_partner
+    chat_partner = ''
+    @chat.users.each do |user|
+      unless user == current_user
+        chat_partner = user
+      end
+    end
+    chat_partner
   end
 end
