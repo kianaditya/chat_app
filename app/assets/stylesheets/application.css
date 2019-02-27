@@ -47,3 +47,11 @@ body {
   color: white;
   margin: 15px;
 }
+
+.messages{
+  background-color: rgb(5, 44, 53);
+  width: 50%;
+  border-radius: 20px;
+  margin: 20px;
+  padding: 10px;
+}

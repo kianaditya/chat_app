@@ -18,6 +18,7 @@ document.addEventListener('turbolinks:load', () =>{
                 },
                 received(data) {
                     let node = document.createElement('p');
+                    node.className='messages'
                     node.innerText = `${data.from} says: ${data.message}`;
                     this.container().appendChild(node);
                 },
