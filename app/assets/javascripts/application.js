@@ -16,3 +16,12 @@
 //= require_tree .
 
 
+document.addEventListener('turbolinks:load', () => {
+  let chatForm = document.getElementById('chat_form')
+  if (chatForm) {
+    chatForm.addEventListener('submit', () => {
+      chatForm.reset()
+
+    })
+  }
+})
