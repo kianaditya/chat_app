@@ -10,6 +10,11 @@ Our App will have following features:
 - Push notifications in chat windows
 - List of chats and list of available users
 
+The final app will look something like this:
+
+
+![](gif.gif)
+
 `Disclaimer: This guide assumes a basic familiarity with rails development, user authentication, and we expect you to follow the TDD way of iterative development.`
 
 ## Basic setup
