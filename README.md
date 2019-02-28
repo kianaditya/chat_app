@@ -331,7 +331,7 @@ end
 
 And finally add the form to the `chat#show` view:
 
-```
+```Haml
 -@messages.each do |message|
   %p= "#{message.user.email} says: #{message.text}"
 
@@ -396,7 +396,7 @@ We are creating unique chat channel for every pair of users, and we need a metho
 Time to update javascript file that was generated for us:
 
 ```javascript
-#app/assets/javascripts/channels/chat.js
+//app/assets/javascripts/channels/chat.js
 
 document.addEventListener('turbolinks:load', () =>{
     let chatForm = document.getElementById('chat_form');
@@ -555,8 +555,7 @@ end
 
 `app/views/chat/show.html.haml`
 
-
-```
+```Haml
 .main
   .chats
     ="Chat with: #{@chat_partner.email}"
@@ -576,4 +575,81 @@ end
         = form.text_field :text
       %p
         = form.submit "Send"
+```
+
+As you might have noticed we added some classes to the layout which we can use for styling purposes. The most important ones were `send-message` and `recieve-message`  in `app/assets/javascripts/channels/chat.js` and in show `app/views/chat/show.html.haml`. We used some conditionals in ruby and javascript to differenciate between the send and recieved messages. Below you can find our simple styling using only css, you can add of course yours:
+
+```css
+/* app/assets/stylesheets/application.css */
+
+body {
+  font-size: 120%;
+  background-color: #F2F6F7;
+  margin: 0;
+  letter-spacing: 1px;
+}
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.chats {
+  background: #008AAD;
+  color: white;
+  border: 1px solid black;
+  width: 60%;
+  text-align: center;
+  margin: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar {
+  background: #008AAD;
+  color: white;
+  height: 50px;
+}
+
+.links {
+  text-decoration: none;
+  color: white;
+  margin: 15px;
+}
+
+.send-message{
+  background-color:darkgreen;
+  width: 30%;
+  border-radius: 20px;
+  margin: 20px;
+  padding: 10px;
+  align-self: flex-end;
+}
+
+.receive-message{
+  background-color: rgb(79, 79, 79);
+  width: 30%;
+  border-radius: 20px;
+  margin: 20px;
+  padding: 10px;
+  align-self: flex-start;
+}
+
+.message-container{
+  display: flex;
+  flex-direction: column;
+}
+
+.join {
+  border:2px black solid;
+  background: dimgray;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.join:hover {
+  background: darkgreen;
+}
 ```
