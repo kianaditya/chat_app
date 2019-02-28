@@ -34,7 +34,7 @@ Follow up by running:
 
 After that you have to configure redis. Add the following code to `config/cable.yml`
 
-```ruby
+````ruby
 redis: &redis
   adapter: redis
   url: redis://localhost:6379/1
@@ -42,7 +42,7 @@ production: *redis
 development: *redis
 test: *redis```
 
-```
+````
 
 ### Scaffold a rails application
 
@@ -338,12 +338,12 @@ And finally add the form to the `chat#show` view:
 -@messages.each do |message|
   %p= "#{message.user.email} says: #{message.text}"
 
-= form_with scope: :message, url: message_index_path, local: true do | form |
+= form_with scope: :message, url: message_index_path, id: :chat_form do | form |
   %p
     = form.label 'Send Message'
     %br/
     = form.text_field :text
-    = form.hidden_field :chat_id, value: @chat.id
+    = form.hidden_field :chat_id, value: @chat.id,id: :chat_id
   %p
     = form.submit "Send"
 ```
@@ -353,5 +353,84 @@ We need to pass down the `chat_id` using a hidden field so the message can be co
 Now we have a chat with 2 users, and a form where we can create messages. We render those messages in the `chat#show`, and when you type you see them appearing. This is because rails redirects us to that page and fetches the information again. That is not the behaviour we are looking for, we need to show them appear dynamically. This is where ActionCable comes into play.
 
 ## Set up ActionCable
+
+Add ActionCable engine to your `routes.rb`
+
+```ruby
+Rails.application.routes.draw do
+  mount ActionCable.server => '/cable'
+end
+```
+
+Use a generator to scaffold a channel
+
+`rails g channel chat`
+
+Update subscribed method in channel settings like so:
+
+```ruby
+#app/channels/chat_channel.rb
+class ChatChannel < ApplicationCable::Channel
+  def subscribed
+    stream_from channel_identifier
+  end
+  
+  def unsubscribed
+    # Any cleanup needed when channel is unsubscribed
+  end
+
+  private
+
+  def channel_identifier
+    identifier = params[:chat_id]
+    "chat_channel_#{identifier}"
+  end
+end
+```
+
+We are creating unique chat channel for every pair of users, and we need a method to subscribe to specific channel based on the logged in user and the partner selected.
+
+Time to update javascript file generated for us:
+
+```javascript
+#app/assets/javascripts/channels/chat.js
+
+document.addEventListener('turbolinks:load', () =>{
+    let chatForm = document.getElementById('chat_form');
+    if (chatForm) {
+        const chatId = document.getElementById('chat_id').value
+        const currentUserEmail = document.getElementById('current_user_email').value
+        App.notifications = App.cable.subscriptions.create({
+            channel: "ChatChannel", chat_id: chatId
+          }, {
+                container() {
+                    const container = document.getElementById('message_window');
+                    return container;
+                },
+                connected() {
+                    console.log(`Connected to message:chat_${chatId}`);
+                },
+                disconnected() {
+                    console.log('Disconneced');
+                },
+                received(data) {
+                    let node = document.createElement('p');
+                    node.className= data.from === currentUserEmail ? 'send-message' : 'receive-message'
+                    node.innerText = `${data.message}`;
+                    this.container().appendChild(node);
+                },
+            }
+          );  
+    };
+});
+```
+
+This needs some explanation!
+
+At the core of the file is the `App.cable.subscriptions.create` command, which creates notifications and updates the page through `received(data)` function by adding an HTML element to the page everytime a new message is received.
+
+This is controlled by identifying `chatId` which we source from our chat form.
+
+Now, in order to get that `chatId` we have to make sure the `chatForm` exists on the view page,so we make sure page is loaded and form exists by wrapping the whole thing in event listeners. 
 
 ## Styling
