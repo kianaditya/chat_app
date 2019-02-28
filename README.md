@@ -1,5 +1,7 @@
 # Basic chat app using Rails ActionCable functionality
 
+##### Written by [Adi](https://github.com/kianaditya) and [Greg](https://github.com/GergKllai1)
+
 We will be building a basic chat app to learn about the [ActionCable functionality](https://guides.rubyonrails.org/action_cable_overview.html) which uses [websockets](https://en.wikipedia.org/wiki/WebSocket) protocol.
 
 Our App will have following features:
@@ -8,41 +10,9 @@ Our App will have following features:
 - Push notifications in chat windows
 - List of chats and list of available users
 
-`Disclaimer: This guide assumes a basic familiarity with rails development, like associations and user authentication.`
+`Disclaimer: This guide assumes a basic familiarity with rails development, user authentication, and we expect you to follow the TDD way of iterative development.`
 
 ## Basic setup
-
-### Redis setup
-
-Redis is a data store that supports the PubSub messaging pattern and one that the ActionCable implementation makes use of.
-
-Install Redis using brew
-
-`$ brew install redis`
-
-Start the Redis server as a service
-
-`$ brew services start redis`
-
-You should also include the redis gem in your application by adding:
-
-`gem 'redis'`
-
-Follow up by running:
-
-`bundle`
-
-After that you have to configure redis. Add the following code to `config/cable.yml`
-
-````ruby
-redis: &redis
-  adapter: redis
-  url: redis://localhost:6379/1
-production: *redis
-development: *redis
-test: *redis```
-
-````
 
 ### Scaffold a rails application
 
@@ -57,7 +27,7 @@ Clean up the usual files.
 Set up [Cucumber](https://github.com/cucumber/cucumber-rails) for testing.
 We set up a feature file to make sure two users can chat with each other, and others cannot access the chat.
 
-```gerkin
+```gherkin
 # features/live_chat_functionality.feature
 
 @javascript
@@ -101,7 +71,16 @@ Feature: LiveChat allows users to exchange messages
 
 This one is tricky to test, because we have to manage multiple users logged into multiple windows. Makes it even more fun when we will eventually get it to work!
 
-Add following chrome options to cucumber `env.rb`
+On the top you can see `@javascript` which means that we will use javascript during our testing. To enable that we need to add chromedriver and configure it.
+
+Add the following gems and bundle:
+
+```ruby
+  gem 'chromedriver-helper'
+  gem 'selenium-webdriver'
+```
+
+And add following chrome options to cucumber `env.rb`
 
 ```ruby
 #features/support/env.rb
@@ -135,6 +114,42 @@ Given("the following users exist") do |table|
     table.hashes.each do |user|
         create(:user, user)
     end
+end
+  
+Given("I( am) logged/log in as {string}") do |email|
+    user = User.find_by(email: email)
+    login_as(user, scope: :user)
+end
+  
+Given("I visit the site") do
+    visit root_path
+end
+  
+Given("I open a new window") do
+    window = open_new_window
+    switch_to_window(window)
+end
+
+Given("I click on {string}") do |element|
+    click_on element
+end
+  
+Given("I fill in {string} in {string}") do |value, element|
+    fill_in element, with: value
+end
+  
+Given("I switch to window {int}") do |index|
+    switch_to_window(windows[index - 1])
+end
+```
+
+```ruby
+Then("I should see {string}") do |content|
+    expect(page).to have_content content
+end
+
+Then("I should not see {string}") do |content|
+    expect(page).not_to have_content content
 end
 ```
 
@@ -242,13 +257,13 @@ And to finish off add 3 views to start with. First we add a navbar partial and r
 
 ```ruby
 #app/views/partials/_navbar.html.haml
-=link_to 'Home', root_path
+= link_to 'Home', root_path
 -unless user_signed_in?
-  =link_to 'Register', new_user_registration_path
-  =link_to 'Login', new_user_session_path
+  = link_to 'Register', new_user_registration_path
+  = link_to 'Login', new_user_session_path
 - else
-  =link_to 'Logout', destroy_user_session_path, { method: :delete }
-  %span=current_user.email
+  = link_to 'Logout', destroy_user_session_path, { method: :delete }
+  %span= current_user.email
 ```
 
 Render this partial in the `app/layouts/application.html.haml` After that we add the index view for chat:
@@ -256,14 +271,14 @@ Render this partial in the `app/layouts/application.html.haml` After that we add
 ```ruby
 #app/view/chat/index.html.haml
 -@chats.each do |chat|
-  =link_to "Chat between #{chat.users.first.email} and #{chat.users.second.email}", chat_path(chat.id)
+  = link_to "Chat between #{chat.users.first.email} and #{chat.users.second.email}", chat_path(chat.id)
 ```
 
 To finish up this we need to add the chat show page as well:
 
 ```ruby
 #app/view/chat/show.html.haml
--@messages.each do |message|
+- @messages.each do |message|
   %p= "#{message.user.email} says: #{message.text}"
 ```
 
@@ -354,6 +369,40 @@ Now we have a chat with 2 users, and a form where we can create messages. We ren
 
 ## Set up ActionCable
 
+### Redis setup
+
+Redis is a data store that supports the PubSub messaging pattern and one that the ActionCable implementation makes use of.
+
+Install Redis using brew
+
+`$ brew install redis`
+
+Start the Redis server as a service
+
+`$ brew services start redis`
+
+You should also include the redis gem in your application by adding:
+
+`gem 'redis'`
+
+Follow up by running:
+
+`bundle`
+
+After that you have to configure redis. Add the following code to `config/cable.yml`
+
+````ruby
+redis: &redis
+  adapter: redis
+  url: redis://localhost:6379/1
+production: *redis
+development: *redis
+test: *redis```
+
+````
+
+### Add ActionCalbe Channels
+
 Add ActionCable engine to your `routes.rb`
 
 ```ruby
@@ -418,7 +467,7 @@ document.addEventListener('turbolinks:load', () =>{
                 },
                 received(data) {
                     let node = document.createElement('p');
-                    node.className= data.from === currentUserEmail ? 'send-message' : 'receive-message'
+                    node.className = data.from === currentUserEmail ? 'send-message' : 'receive-message'
                     node.innerText = `${data.message}`;
                     this.container().appendChild(node);
                 },
@@ -535,21 +584,21 @@ class ChatController < ApplicationController
 end
 ```
 
-```ruby
+```Haml
 #app/views/chat/index.html.haml
 -if user_signed_in?
   .main
     .chats
       %h4 Active chats:
-      -@chats.each do |chat|
-        -chat.users.each do |user|
-          -unless user === current_user
-            %p=link_to "Chat with #{user.email}", chat_path(chat.id), { class: 'links join'}
+      - @chats.each do |chat|
+        - chat.users.each do |user|
+          - unless user === current_user
+            %p= link_to "Chat with #{user.email}", chat_path(chat.id), { class: 'links join'}
     .chats
       %h4 Start a new chat with:
-      -@users.each do |user|
-        -unless user == current_user
-          =link_to "#{user.email}", chat_index_path(user: user), { class: 'links join' , method: :post }
+      - @users.each do |user|
+        - unless user == current_user
+          = link_to "#{user.email}", chat_index_path(user: user), { class: 'links join' , method: :post }
           %br/
 ```
 
@@ -559,11 +608,11 @@ end
 .main
   .chats
     ="Chat with: #{@chat_partner.email}"
-    -@messages.each do |message|
-      -if message.user.email == current_user.email
+    - @messages.each do |message|
+      - if message.user.email == current_user.email
         %p.send-message= message.text
       - else
-        %p.receive-message= message.text
+        %p.receive-message = message.text
     #message_window.message-container
     = form_with scope: :message, url: message_index_path, id: :chat_form do | form |
       = form.hidden_field :chat_id, value: @chat.id, id: :chat_id
@@ -576,6 +625,10 @@ end
       %p
         = form.submit "Send"
 ```
+
+With this we arrived to the end of our planned functionlity. By running cucumber we should see all of our tests passing.
+
+### Conditional Styling
 
 As you might have noticed we added some classes to the layout which we can use for styling purposes. The most important ones were `send-message` and `recieve-message`  in `app/assets/javascripts/channels/chat.js` and in show `app/views/chat/show.html.haml`. We used some conditionals in ruby and javascript to differenciate between the send and recieved messages. Below you can find our simple styling using only css, you can add of course yours:
 
@@ -653,3 +706,9 @@ body {
   background: darkgreen;
 }
 ```
+
+## Conclusion
+
+At this point we should have a simple functioning chat application, with instantaneous feedback, tested with cucumber. We left a lot of room for improvements, for instance to add another channel for chat_windows so users get instant feedback when someone starts a chat with them.
+
+We hope that you have learned something during this guide, and enjoyed it as much as we enjoyed writing it :).
