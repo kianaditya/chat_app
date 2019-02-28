@@ -251,12 +251,10 @@ And to finish off add 3 views to start with. First we add a navbar partial and r
   %span=current_user.email
 ```
 
-After that we add the index view for chat:
+Render this partial in the `app/layouts/application.html.haml` After that we add the index view for chat:
 
 ```ruby
 #app/view/chat/index.html.haml
-= render partial: 'partials/navbar'
-
 -@chats.each do |chat|
   =link_to "Chat between #{chat.users.first.email} and #{chat.users.second.email}", chat_path(chat.id)
 ```
@@ -333,11 +331,11 @@ end
 
 And finally add the form to the `chat#show` view:
 
-```ruby
-#app/view/chat/show.html.haml
+```
 -@messages.each do |message|
   %p= "#{message.user.email} says: #{message.text}"
 
+#message_window
 = form_with scope: :message, url: message_index_path, id: :chat_form do | form |
   %p
     = form.label 'Send Message'
@@ -347,6 +345,8 @@ And finally add the form to the `chat#show` view:
   %p
     = form.submit "Send"
 ```
+
+`#message_window` will be the container where will display the messages we broadcast.
 
 We need to pass down the `chat_id` using a hidden field so the message can be connected to the chat.
 
@@ -366,31 +366,34 @@ Use a generator to scaffold a channel
 
 `rails g channel chat`
 
-Update subscribed method in channel settings like so:
+This will generate couple of files for us that we need to configure. Let's follow the flow. First we add the the `ActionCable.server.broadcast` method to the `message_controller.rb`. Change the file so that it looks like this:
 
 ```ruby
-#app/channels/chat_channel.rb
-class ChatChannel < ApplicationCable::Channel
-  def subscribed
-    stream_from channel_identifier
-  end
-  
-  def unsubscribed
-    # Any cleanup needed when channel is unsubscribed
+#app/controllers/chat_controller.rb
+class MessageController < ApplicationController
+  before_action :authenticate_user!
+  def create
+    message = current_user.messages.new(message_params)
+    chat = Chat.find_by_id(message_params[:chat_id])
+    if message.save
+      ActionCable.server.broadcast("chat_channel_#{chat.id}", message: message.text, from: current_user.email)
+      head :ok
+    end
   end
 
   private
 
-  def channel_identifier
-    identifier = params[:chat_id]
-    "chat_channel_#{identifier}"
+  def message_params
+    params.require(:message).permit(:text, :chat_id)
   end
 end
 ```
 
+We are using `chat.id` to specify the chat channel we want to broadcast to, use `message.text` as the message body, and `current_user.email` to specify who is the sender.
+
 We are creating unique chat channel for every pair of users, and we need a method to subscribe to specific channel based on the logged in user and the partner selected.
 
-Time to update javascript file generated for us:
+Time to update javascript file that was generated for us:
 
 ```javascript
 #app/assets/javascripts/channels/chat.js
@@ -431,6 +434,146 @@ At the core of the file is the `App.cable.subscriptions.create` command, which c
 
 This is controlled by identifying `chatId` which we source from our chat form.
 
-Now, in order to get that `chatId` we have to make sure the `chatForm` exists on the view page,so we make sure page is loaded and form exists by wrapping the whole thing in event listeners. 
+Now, in order to get that `chatId` we have to make sure the `chatForm` exists on the view page, so we make sure page is loaded and form exists by wrapping the whole thing in event listeners.
 
-## Styling
+The last piece of the puzzle is to update the `ChatChannel` settings in ruby like so:
+
+```ruby
+#app/channels/chat_channel.rb
+class ChatChannel < ApplicationCable::Channel
+  def subscribed
+    stream_from channel_identifier
+  end
+  
+  def unsubscribed
+    # Any cleanup needed when channel is unsubscribed
+  end
+
+  private
+
+  def channel_identifier
+    identifier = params[:chat_id]
+    "chat_channel_#{identifier}"
+  end
+end
+```
+
+This will kick in once we ran the `App.cable.subscriptions.create` command and will stream from the channel we constructed with `channel_identifier`.
+
+## Connecting the dots
+
+Now we have a basic chat application but we don't have a way for users to create chats with users they are not chatting with. We used the seed file so far.
+
+To do that we need to add a `create` action for `Chat`. It would be also great, to render these elements conditionally, so that we can only create chats with users that we are not in chat with.
+
+The following code will be a first iteration it will be up to you to refactor it. Modify the `chat_controller.rb` and the chat views accordingly:
+
+```ruby
+#app/controllers/chat_controller.rb
+class ChatController < ApplicationController
+  def index
+    if user_signed_in?
+      @chats = current_user.chats
+      @users = get_available_chats
+    end
+  end
+
+  def show
+    @chat = Chat.find(params[:id])
+    @messages = Message.where(chat_id: params[:id])
+    @chat_partner = get_chat_partner
+  end
+
+  def create
+    user = User.find_by_id(params[:user])
+    chat = Chat.new()
+    if chat.save
+      chat.users << current_user
+      chat.users << user
+      redirect_to chat_path(chat)
+    end
+  end
+
+  private
+
+  def get_available_chats
+    existing_chat_users = get_existing_chat_users
+    users = get_users(existing_chat_users)
+    users
+  end
+
+  def get_existing_chat_users
+    existing_chat_users = []
+    @chats.each do |chat|
+      chat.users.each do |user|
+        existing_chat_users.push(user)
+      end
+    end
+    existing_chat_users
+  end
+  
+  def get_users(existing_chat_users)
+    users = []
+    all_users = User.all
+    all_users.each do |user|
+      unless existing_chat_users.include?(user)
+        users.push(user)
+      end
+    end
+    users
+  end
+
+  def get_chat_partner
+    chat_partner = ''
+    @chat.users.each do |user|
+      unless user == current_user
+        chat_partner = user
+      end
+    end
+    chat_partner
+  end
+end
+```
+
+```ruby
+#app/views/chat/index.html.haml
+-if user_signed_in?
+  .main
+    .chats
+      %h4 Active chats:
+      -@chats.each do |chat|
+        -chat.users.each do |user|
+          -unless user === current_user
+            %p=link_to "Chat with #{user.email}", chat_path(chat.id), { class: 'links join'}
+    .chats
+      %h4 Start a new chat with:
+      -@users.each do |user|
+        -unless user == current_user
+          =link_to "#{user.email}", chat_index_path(user: user), { class: 'links join' , method: :post }
+          %br/
+```
+
+`app/views/chat/show.html.haml`
+
+
+```
+.main
+  .chats
+    ="Chat with: #{@chat_partner.email}"
+    -@messages.each do |message|
+      -if message.user.email == current_user.email
+        %p.send-message= message.text
+      - else
+        %p.receive-message= message.text
+    #message_window.message-container
+    = form_with scope: :message, url: message_index_path, id: :chat_form do | form |
+      = form.hidden_field :chat_id, value: @chat.id, id: :chat_id
+      = form.hidden_field :current_user_email, value: current_user.email, id: :current_user_email
+
+      %p
+        = form.label 'Send Message'
+        %br/
+        = form.text_field :text
+      %p
+        = form.submit "Send"
+```
