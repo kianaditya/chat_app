@@ -8,9 +8,41 @@ Our App will have following features:
 - Push notifications in chat windows
 - List of chats and list of available users
 
-`Disclaimer: This guide assumes a basic familiarity with rails development, like assoications and user authentication.`
+`Disclaimer: This guide assumes a basic familiarity with rails development, like associations and user authentication.`
 
 ## Basic setup
+
+### Redis setup
+
+Redis is a data store that supports the PubSub messaging pattern and one that the ActionCable implementation makes use of.
+
+Install Redis using brew
+
+`$ brew install redis`
+
+Start the Redis server as a service
+
+`$ brew services start redis`
+
+You should also include the redis gem in your application by adding:
+
+`gem 'redis'`
+
+Follow up by running:
+
+`bundle`
+
+After that you have to configure redis. Add the following code to `config/cable.yml`
+
+```ruby
+redis: &redis
+  adapter: redis
+  url: redis://localhost:6379/1
+production: *redis
+development: *redis
+test: *redis```
+
+```
 
 ### Scaffold a rails application
 
@@ -18,11 +50,105 @@ First scaffold basic rails app
 
 `rails new chat_app --database=postgresql --skip-test --skip-bundle`
 
+Clean up the usual files.
+
+### Set up testing
+
 Set up [Cucumber](https://github.com/cucumber/cucumber-rails) for testing.
+We set up a feature file to make sure two users can chat with each other, and others cannot access the chat.
+
+```gerkin
+# features/live_chat_functionality.feature
+
+@javascript
+Feature: LiveChat allows users to exchange messages
+    As a user
+    In order to chat with other users
+    I want a live chat feature
+
+    Background:
+        Given the following users exist
+            | email             |
+            | user-1@random.com |
+            | user-2@random.com |
+            | user-3@random.com |
+
+        And I am logged in as "user-1@random.com"
+        And I visit the site
+        And I click on "user-2@random.com"
+
+    Scenario: Users can exchange messages
+        Given I fill in "Hello!" in "message_text"
+        And I click on 'Send'
+        And I open a new window
+        And I log in as "user-2@random.com"
+        And I visit the site
+        And I click on "Chat with user-1@random.com"
+        Then I should see "Chat with: user-1@random.com"
+        Then I should see "Hello!"
+        And I fill in "Hello there!" in "message_text"
+        And I click on 'Send'
+        And I switch to window 1
+        And I should see "Hello there!"
+
+    Scenario: Other users cannot see the chat
+
+        Given I open a new window
+        And I log in as "user-3@random.com"
+        And I visit the site
+        Then I should not see "join"
+```
+
+This one is tricky to test, because we have to manage multiple users logged into multiple windows. Makes it even more fun when we will eventually get it to work!
+
+Add following chrome options to cucumber `env.rb`
+
+```ruby
+#features/support/env.rb
+Cucumber::Rails::Database.javascript_strategy = :truncation
+
+Chromedriver.set_version '2.42'
+
+chrome_options = %w[no-sandbox disable-popup-blocking disable-infobars]
+
+chrome_options << 'headless'
+
+Capybara.register_driver :selenium do |app|
+    options = Selenium::WebDriver::Chrome::Options.new(
+        args: chrome_options
+)
+Capybara::Selenium::Driver.new(
+        app,
+        browser: :chrome,
+        options: options
+)
+end
+```
+
+Create `basic_steps.rb` and `assertion_steps.rb` step definition files and store the step definitions appropriately.
+
+Let's start by running cucumber. Fill in the step definition as:
+
+```ruby
+#features/step_definitions/basic_steps.rb
+Given("the following users exist") do |table|
+    table.hashes.each do |user|
+        create(:user, user)
+    end
+end
+```
+
+To get it to work, we need to add the line `World(FactoryBot::Syntax::Methods)` to our `features/support/env.rb` file.
+
+It will now complain about lack of users in our code.
 
 ### Set up Devise
 
-Set up [devise](https://github.com/plataformatec/devise) which will be used for user authentication.
+Set up [devise](https://github.com/plataformatec/devise) which will be used for user creation/authentication.
+
+After the set up, make sure you have a **User** model and a working factory for user.
+
+Now that we have users in the system, we need to add chat and messaging functionality.
 
 ### Generate models
 
