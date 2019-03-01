@@ -149,6 +149,7 @@ end
 ```
 
 ```ruby
+#features/step_definitions/assertion_steps.rb
 Then("I should see {string}") do |content|
     expect(page).to have_content content
 end
@@ -258,7 +259,7 @@ Rails.application.routes.draw do
 end
 ```
 
-And to finish off add 3 views to start with. First we add a navbar partial and render it in `chat#index` so that we are able to log in and out
+And to finish off add 3 views to start with. First we add a navbar partial so that we are able to log in and out:
 
 ```ruby
 #app/views/partials/_navbar.html.haml
