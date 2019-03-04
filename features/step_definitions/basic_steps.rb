@@ -29,3 +29,7 @@ end
 Given("I switch to window {int}") do |index|
     switch_to_window(windows[index - 1])
 end
+
+Given("I stop") do
+  binding.pry
+end
