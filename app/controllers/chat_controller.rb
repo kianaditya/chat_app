@@ -14,11 +14,9 @@ class ChatController < ApplicationController
 
   def create
     user = User.find_by_id(params[:user])
-    chat = Chat.new()
-    if chat.save
-      chat.users << [current_user, user]
-      redirect_to chat_path(chat)
-    end
+    chat = Chat.create()
+    chat.users << [current_user, user]
+    redirect_to chat_path(chat)
   end
 
   private
